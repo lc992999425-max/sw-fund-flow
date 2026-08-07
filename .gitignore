@@ -1,0 +1,6 @@
+# 只发布网站运行所需的 3 个文件，其余全部排除（避免泄露密钥 / 上传大数据 / 脚本）
+*
+!.gitignore
+!index.html
+!fundflow_data.js
+!echarts.min.js
