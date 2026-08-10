@@ -62,6 +62,7 @@
   .charts{display:grid; grid-template-columns:1fr; gap:22px;}
   #barChart{width:100%;}
   #heatChart{width:100%; height:760px;}
+  #dailyNetChart{width:100%; height:760px;}
   .daily-table{width:100%; border-collapse:collapse; font-size:13px;}
   .daily-table thead th{position:sticky; top:0; background:#141c28; color:#8b97a7; font-weight:600; padding:8px 14px; text-align:right; border-bottom:1px solid rgba(255,255,255,.1); z-index:1;}
   .daily-table thead th:first-child{text-align:left;}
@@ -131,6 +132,15 @@
     <div id="heatChart"></div>
   </div>
   <div class="panel">
+    <h2>行业每日净流入热力图（近 10 个交易日）</h2>
+    <div class="legend">
+      <span><i style="background:rgba(247,85,106,.85)"></i>流入(正·红)</span>
+      <span><i style="background:rgba(46,201,138,.85)"></i>流出(负·绿)</span>
+      <span><i style="background:rgba(125,135,148,.6)"></i>持平</span>
+    </div>
+    <div id="dailyNetChart"></div>
+  </div>
+  <div class="panel">
     <h2>全市场主力净流入（每日）</h2>
     <h3 class="daily-sub">每日趋势（柱状图）</h3>
     <div id="marketDailyChart"></div>
@@ -163,7 +173,7 @@
 const DATA = window.FUND_DATA;
 let SORT={key:"name",dir:1};
 let BAR_WIN=1, DETAIL_WIN=20, DETAIL_IND="";
-let barChart,heatChart,lineChart,marketDailyChart,marketWinChart;
+let barChart,heatChart,lineChart,marketDailyChart,marketWinChart,dailyNetChart;
 
 const WINS=[1,2,3,4,5,10,20,30,40,60];
 const COLORS={up:"#f7556a",down:"#2ec98a",zero:"#7d8794"};
@@ -175,10 +185,11 @@ function yiv(v){ return v/10000; }
 function boot(){
   barChart=echarts.init(document.getElementById("barChart"));
   heatChart=echarts.init(document.getElementById("heatChart"));
+  dailyNetChart=echarts.init(document.getElementById("dailyNetChart"));
   lineChart=echarts.init(document.getElementById("lineChart"));
   marketWinChart=echarts.init(document.getElementById("marketWinChart"));
   marketDailyChart=echarts.init(document.getElementById("marketDailyChart"));
-  window.addEventListener("resize",()=>{barChart.resize();heatChart.resize();lineChart.resize();marketDailyChart.resize();marketWinChart.resize();});
+  window.addEventListener("resize",()=>{barChart.resize();heatChart.resize();lineChart.resize();marketDailyChart.resize();marketWinChart.resize();dailyNetChart.resize();});
   if(!DATA || DATA.status!=="ok"){
     const b=document.getElementById("banner"); b.style.display="block";
     b.textContent="数据文件 fundflow_data.js 未生成或为空。请运行 gen_static.py 重新生成后刷新本页面。";
@@ -193,7 +204,7 @@ function boot(){
     if(DATA.stocks_with_data) t += "（"+DATA.stocks_with_data+" 只有资金流数据）";
     document.getElementById("totalStocks").textContent = t;
   }
-  renderCards(); renderHead(); renderTable(); renderBarSeg(); renderBar(); renderHeat(); renderMarketDaily(); renderMarketDailyBar(); renderMarketWin();
+  renderCards(); renderHead(); renderTable(); renderBarSeg(); renderBar(); renderHeat(); renderDailyNet(); renderMarketDaily(); renderMarketDailyBar(); renderMarketWin();
 }
 
 function renderCards(){
@@ -287,6 +298,39 @@ function renderHeat(){
     yAxis:{type:"category",data:ys,axisLabel:{color:"#cdd6e0",fontSize:12},splitArea:{show:true}},
     series:[{type:"heatmap",data:data.map(d=>({value:d,itemStyle:{color:colorOf(d[2])}})),
       label:{show:true,color:"#0d1117",fontSize:11,formatter:p=>(p.value[2]>=0?"+":"")+p.value[2].toFixed(0)+"亿"},
+      emphasis:{itemStyle:{shadowBlur:8,shadowColor:"rgba(0,0,0,.4)"}}}]
+  },true);
+}
+
+function renderDailyNet(){
+  // 收集全部交易日，取最近 10 个
+  const dateSet={};
+  DATA.industries.forEach(it=>(it.daily_series||[]).forEach(d=>{dateSet[d.date]=1;}));
+  const dates=Object.keys(dateSet).sort().slice(-10);
+  const ys=DATA.industries.map(x=>x.name);
+  const xs=dates.map(d=>d.slice(4,6)+"-"+d.slice(6,8));   // MM-DD
+  const data=[]; let mx=1e-9;
+  DATA.industries.forEach((it,yi)=>{
+    const m={}; (it.daily_series||[]).forEach(d=>{m[d.date]=d.main;});
+    dates.forEach((dt,xi)=>{
+      const v=yiv(m[dt]||0);
+      data.push([xi,yi,v]);
+      mx=Math.max(mx,Math.abs(v));
+    });
+  });
+  const colorOf=v=>{
+    const a=(0.35+0.6*Math.min(1,Math.abs(v)/mx)).toFixed(3);
+    if(v>0) return "rgba(247,85,106,"+a+")";
+    if(v<0) return "rgba(46,201,138,"+a+")";
+    return "rgba(125,135,148,0.5)";
+  };
+  dailyNetChart.setOption({
+    tooltip:{position:"top",valueFormatter:v=>v.toFixed(2)+" 亿"},
+    grid:{left:100,right:20,top:10,bottom:55},
+    xAxis:{type:"category",data:xs,axisLabel:{color:"#cdd6e0",fontSize:13},splitArea:{show:true}},
+    yAxis:{type:"category",data:ys,axisLabel:{color:"#cdd6e0",fontSize:12},splitArea:{show:true}},
+    series:[{type:"heatmap",data:data.map(d=>({value:d,itemStyle:{color:colorOf(d[2])}})),
+      label:{show:true,color:"#0d1117",fontSize:11,formatter:p=>(p.value[2]>=0?"+":"")+p.value[2].toFixed(1)+"亿"},
       emphasis:{itemStyle:{shadowBlur:8,shadowColor:"rgba(0,0,0,.4)"}}}]
   },true);
 }
