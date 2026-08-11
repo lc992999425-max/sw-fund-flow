@@ -286,7 +286,7 @@ function renderHeat(){
   const data=[]; let mx=1e-9;
   DATA.industries.forEach((it,yi)=>WINS.forEach((w,xi)=>{const v=yiv(it.windows[String(w)].main);data.push([xi,yi,v]);mx=Math.max(mx,Math.abs(v));}));
   const colorOf=v=>{
-    const a=(0.35+0.6*Math.min(1,Math.abs(v)/mx)).toFixed(3);
+    const a=(0.6+0.4*Math.min(1,Math.abs(v)/mx)).toFixed(3);
     if(v>0) return "rgba(247,85,106,"+a+")";
     if(v<0) return "rgba(46,201,138,"+a+")";
     return "rgba(125,135,148,0.5)";
@@ -306,7 +306,7 @@ function renderDailyNet(){
   // 收集全部交易日，取最近 10 个
   const dateSet={};
   DATA.industries.forEach(it=>(it.daily_series||[]).forEach(d=>{dateSet[d.date]=1;}));
-  const dates=Object.keys(dateSet).sort().slice(-10);
+  const dates=Object.keys(dateSet).sort().slice(-10).reverse();
   const ys=DATA.industries.map(x=>x.name);
   const xs=dates.map(d=>d.slice(4,6)+"-"+d.slice(6,8));   // MM-DD
   const data=[]; let mx=1e-9;
@@ -319,7 +319,7 @@ function renderDailyNet(){
     });
   });
   const colorOf=v=>{
-    const a=(0.35+0.6*Math.min(1,Math.abs(v)/mx)).toFixed(3);
+    const a=(0.6+0.4*Math.min(1,Math.abs(v)/mx)).toFixed(3);
     if(v>0) return "rgba(247,85,106,"+a+")";
     if(v<0) return "rgba(46,201,138,"+a+")";
     return "rgba(125,135,148,0.5)";
