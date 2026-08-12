@@ -368,10 +368,10 @@ function renderMarketWin(){
   const {dates,vals}=marketAgg();
   const data=wins.map(w=>{const s=vals.slice(Math.max(0,vals.length-w));const v=s.reduce((a,b)=>a+b,0);return {w,v:yiv(v)};});
   marketWinChart.setOption({
-    grid:{left:70,right:30,top:15,bottom:30},
+    grid:{left:84,right:30,top:28,bottom:30},
     tooltip:{trigger:"axis",axisPointer:{type:"shadow"},valueFormatter:v=>v.toFixed(2)+" 亿"},
     xAxis:{type:"category",data:data.map(x=>x.w+"日"),axisLabel:{color:"#cdd6e0",fontSize:12},axisTick:{show:false}},
-    yAxis:{type:"value",axisLabel:{color:"#8b97a7",formatter:v=>v.toFixed(0)+"亿"},splitLine:{lineStyle:{color:"rgba(255,255,255,.06)"}}},
+    yAxis:{type:"value",scale:true,axisLabel:{color:"#8b97a7",formatter:v=>v.toFixed(0)+"亿"},splitLine:{lineStyle:{color:"rgba(255,255,255,.06)"}}},
     series:[{type:"bar",data:data.map(x=>({value:x.v,itemStyle:{color:x.v>0?COLORS.up:(x.v<0?COLORS.down:COLORS.zero),borderRadius:[0,4,4,0]}})),
       label:{show:true,position:"top",color:"#cdd6e0",fontSize:11,formatter:p=>p.value.toFixed(1)+"亿"}}]
   },true);
