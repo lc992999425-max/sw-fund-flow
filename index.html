@@ -35,6 +35,15 @@
     transition:transform .15s ease, box-shadow .15s ease;
   }
   button.btn:hover{transform:translateY(-1px); box-shadow:0 6px 20px rgba(59,130,246,.4);}
+  button.btn.donate{background:linear-gradient(135deg,#f97316,#ec4899);}
+  button.btn.donate:hover{box-shadow:0 6px 20px rgba(236,72,153,.45);}
+  .donate-row{display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-top:6px;}
+  .donate-card{text-align:center;}
+  .donate-card .lbl{font-size:14px; font-weight:700; margin-bottom:10px;}
+  .donate-card .lbl.wx{color:#07c160;}
+  .donate-card .lbl.zfb{color:#1677ff;}
+  .donate-card img{width:320px; height:420px; object-fit:contain; border-radius:10px; border:1px solid var(--panel-bd); background:#fff; padding:6px;}
+  .donate-tip{font-size:12px; color:var(--muted); margin-top:10px; line-height:1.6; text-align:center;}
   .ghost{background:var(--panel); border:1px solid var(--panel-bd); color:var(--text);}
   .wrap{padding:24px 28px 60px; max-width:1500px; margin:0 auto;}
   .cards{display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:22px;}
@@ -94,9 +103,10 @@
 <header>
   <h1>申万一级行业资金流向<span class="sub">主力净流入 = 大单 + 特大单 · 单位：亿元</span></h1>
   <span id="totalStocks" style="background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(22,163,74,.12));border:1px solid rgba(34,197,94,.4);color:#bbf7d0;padding:6px 14px;border-radius:999px;font-size:14px;font-weight:600;white-space:nowrap;">— 只成分股</span>
+  <span style="background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(99,102,241,.1));border:1px solid rgba(59,130,246,.4);color:#bfdbfe;padding:6px 14px;border-radius:999px;font-size:13px;white-space:nowrap;">每天盘后16:30以后更新当天数据</span>
   <div class="spacer"></div>
   <span id="updated">加载中…</span>
-  <button class="btn" id="refreshBtn" onclick="doRefresh()">🔄 刷新数据</button>
+  <button class="btn donate" onclick="openDonate()">❤️ 打赏作者</button>
 </header>
 
 <div class="wrap">
@@ -166,6 +176,27 @@
       <div><h4 style="color:var(--up)">流入 Top 20</h4><div style="overflow:auto;max-height:300px"><table id="inTbl"></table></div></div>
       <div><h4 style="color:var(--down)">流出 Top 20</h4><div style="overflow:auto;max-height:300px"><table id="outTbl"></table></div></div>
     </div>
+  </div>
+</div>
+
+<!-- donate modal -->
+<div class="mask" id="donateMask" onclick="if(event.target===this)closeDonate()">
+  <div class="modal">
+    <div class="top">
+      <h3>❤️ 打赏作者</h3>
+      <span class="x" onclick="closeDonate()">×</span>
+    </div>
+    <div class="donate-row">
+      <div class="donate-card">
+        <div class="lbl wx">微信支付</div>
+        <img src="donate_wx.jpg" alt="微信收款码">
+      </div>
+      <div class="donate-card">
+        <div class="lbl zfb">支付宝</div>
+        <img src="donate_zfb.jpg" alt="支付宝收款码">
+      </div>
+    </div>
+    <div class="donate-tip">您的支持是我持续更新数据的动力 🙏 长按或截图识别二维码即可打赏</div>
   </div>
 </div>
 
@@ -417,69 +448,8 @@ function renderDetail(it){
   document.getElementById("outTbl").innerHTML=head+rt(outf);
 }
 function closeModal(){document.getElementById("mask").classList.remove("show");}
-
-function doRefresh(){
-  if(location.protocol==="file:"){
-    alert(
-      "当前是离线模式（双击 html 打开的），无法在线刷新。\n\n"+
-      "请按以下步骤操作：\n"+
-      "① 先在 data/申万行业数据.xlsx 里添加/修改股票并保存\n"+
-      "② 关闭本网页\n"+
-      "③ 双击「刷新数据.bat」（会自动拉数据 + 重新打开网站）\n\n"+
-      "整个过程约 1~3 分钟，全自动完成。"
-    );
-    return;
-  }
-  startRefresh();
-}
-
-let _refreshing=false, _toast=null;
-function showToast(t){
-  if(!_toast){
-    _toast=document.createElement("div");
-    _toast.id="refreshToast";
-    _toast.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);"
-      +"background:rgba(18,22,29,.96);color:#e7edf5;padding:11px 20px;border-radius:10px;"
-      +"font-size:13px;z-index:9999;box-shadow:0 8px 28px rgba(0,0,0,.45);"
-      +"border:1px solid rgba(255,255,255,.1);max-width:82vw;text-align:center;";
-    document.body.appendChild(_toast);
-  }
-  _toast.style.display="block";
-  _toast.textContent=t;
-}
-function startRefresh(){
-  if(_refreshing) return;
-  const btn=document.getElementById("refreshBtn");
-  btn.disabled=true; btn.textContent="刷新中…";
-  showToast("正在发起刷新…");
-  fetch("/api/refresh",{method:"POST"})
-    .then(r=>r.json())
-    .then(j=>{
-      if(j.status==="started"||j.status==="running"){ pollStatus(); }
-      else { showToast("启动失败："+JSON.stringify(j)); resetBtn(); }
-    })
-    .catch(e=>{ showToast("请求失败："+e); resetBtn(); });
-}
-function resetBtn(){
-  const btn=document.getElementById("refreshBtn");
-  btn.disabled=false; btn.textContent="🔄 刷新数据";
-}
-function pollStatus(){
-  _refreshing=true;
-  const iv=setInterval(()=>{
-    fetch("/api/status").then(r=>r.json()).then(s=>{
-      const prog=s.progress||"";
-      if(s.app_refreshing || s.running){
-        showToast("刷新中… "+(prog||"请稍候（约1~3分钟）"));
-      } else {
-        clearInterval(iv);
-        _refreshing=false; resetBtn();
-        showToast("✅ 刷新完成，正在重新加载…");
-        setTimeout(()=>location.reload(true), 700);
-      }
-    }).catch(()=>{});
-  }, 1500);
-}
+function openDonate(){document.getElementById("donateMask").classList.add("show");}
+function closeDonate(){document.getElementById("donateMask").classList.remove("show");}
 
 boot();
 </script>
