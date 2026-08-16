@@ -251,9 +251,16 @@ function renderCards(){
     {k:"昨日最大流入行业",v:topNPrev(1),nv:1},
     {k:"昨日最大流出行业",v:topNPrev(-1),nv:-1},
   ];
-  document.getElementById("cards").innerHTML=cards.map(c=>
-    `<div class="card"><div class="k">${c.k}</div><div class="v ${cls(yiv(c.nv))}">${c.v}</div></div>`
-  ).join("");
+  document.getElementById("cards").innerHTML=cards.map(c=>{
+    let vHtml=c.v, outerCls="";
+    if(c.k==="净流入行业数 / 总计"){
+      const [a,b]=c.v.split(" / ");
+      vHtml=`<span class="up">${a}</span> / <span>${b}</span>`;
+    }else{
+      outerCls=cls(yiv(c.nv));
+    }
+    return `<div class="card"><div class="k">${c.k}</div><div class="v ${outerCls}">${vHtml}</div></div>`;
+  }).join("");
 }
 function topN(w,sign){
   const arr=DATA.industries.slice().sort((a,b)=>sign*(b.windows[String(w)].main-a.windows[String(w)].main));
