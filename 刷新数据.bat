@@ -1,27 +1,49 @@
 @echo off
-chcp 65001 >nul
-cd /d "D:\ç”³ä¸‡è¡Œä¸šèµ„é‡‘æµå‘"
+chcp 936 >nul
+cd /d "D:\ÉêÍòĞĞÒµ×Ê½ğÁ÷Ïò"
 
-set "PY=C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe"
+:: Ö»ÓÃÏîÄ¿×Ô´øµÄ .venv£¨²»ÒÀÀµ WorkBuddy£¬Ò²²»ÒÀÀµÏµÍ³ Python£©
+set "PY=%~dp0.venv\Scripts\python.exe"
+set "PYTHONIOENCODING=gbk:replace"
 
 echo.
 echo ========================================
-echo   ç”³ä¸‡è¡Œä¸šèµ„é‡‘æµå‘ - æ•°æ®åˆ·æ–° + åŒæ­¥ä¸Šç½‘
+echo   ÉêÍòĞĞÒµ×Ê½ğÁ÷Ïò - Êı¾İË¢ĞÂ + Í¬²½ÉÏÍø
 echo ========================================
 echo.
 
 if not exist "%PY%" (
-    echo [é”™è¯¯] æ‰¾ä¸åˆ° Python ç¯å¢ƒï¼š
-    echo   %PY%
+    echo [´íÎó] Ã»ÕÒµ½ÏîÄ¿×Ô´øµÄÔËĞĞ»·¾³ .venv
     echo.
-    echo è¯·åœ¨ WorkBuddy å¯¹è¯æ¡†é‡Œå‘é€"åˆ·æ–°æ•°æ®"ï¼Œè®©åŠ©æ‰‹å¸®ä½ åˆ·æ–°ã€‚
+    echo ÇëÏÈË«»÷¡¸³õÊ¼»¯»·¾³.bat¡¹½¨Á¢»·¾³£¨Ö»ĞèÒ»´Î£¬Ô¼ 2~5 ·ÖÖÓ£©¡£
     pause
     exit /b 1
 )
 
-echo [1/4] æ­£åœ¨è¯»å– Excel æˆåˆ†è¡¨...
-echo [2/4] æ­£åœ¨ä» Tushare æ‹‰å–èµ„é‡‘æµæ•°æ®ï¼ˆçº¦ 1~3 åˆ†é’Ÿï¼‰...
-echo [3/4] æ­£åœ¨é‡æ–°ç”Ÿæˆæ•°æ®æ–‡ä»¶...
+:: ÒÀÀµ×Ô¼ì£º°üÈ±Ê§Ê±×Ô¶¯²¹×°£¨°¢ÀïÔÆ¾µÏñ£¬Ê§°Ü»ØÍË¹Ù·½Ô´£©
+"%PY%" -c "import openpyxl, tushare, pandas" >nul 2>&1
+if not errorlevel 1 goto DEPS_OK
+
+echo [ÌáÊ¾] ¼ì²âµ½ÒÀÀµÈ±Ê§£¬ÕıÔÚ×Ô¶¯°²×°£¨Ô¼ 1~3 ·ÖÖÓ£¬ÇëÎğ¹Ø±Õ´°¿Ú£©...
+"%PY%" -m pip install --disable-pip-version-check -i https://mirrors.aliyun.com/pypi/simple/ -r "%~dp0requirements.txt"
+"%PY%" -c "import openpyxl, tushare, pandas" >nul 2>&1
+if not errorlevel 1 goto DEPS_OK
+
+echo [ÌáÊ¾] ¾µÏñÔ´°²×°Î´³É¹¦£¬¸ÄÓÃ¹Ù·½Ô´ÖØÊÔ...
+"%PY%" -m pip install --disable-pip-version-check -r "%~dp0requirements.txt"
+"%PY%" -c "import openpyxl, tushare, pandas" >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo [´íÎó] ÒÀÀµ°²×°Ê§°Ü£¬Çë°ÑÉÏ·½±¨´íĞÅÏ¢·¢¸øÖúÊÖ´¦Àí¡£
+    pause
+    exit /b 1
+)
+
+:DEPS_OK
+
+echo [1/4] ÕıÔÚ¶ÁÈ¡ Excel ³É·Ö±í...
+echo [2/4] ÕıÔÚ´Ó Tushare À­È¡×Ê½ğÁ÷Êı¾İ£¨Ô¼ 1~3 ·ÖÖÓ£©...
+echo [3/4] ÕıÔÚÖØĞÂÉú³ÉÊı¾İÎÄ¼ş...
 echo.
 
 "%PY%" refresh.py
@@ -29,7 +51,7 @@ echo.
 if errorlevel 1 goto FAIL
 
 echo.
-echo [4/4] æ­£åœ¨åŒæ­¥åˆ° GitHub Pages...
+echo [4/4] ÕıÔÚÍ¬²½µ½ GitHub Pages...
 copy /Y "site\fundflow_data.js" "fundflow_data.js" >nul
 copy /Y "site\index.html" "index.html" >nul
 copy /Y "site\echarts.min.js" "echarts.min.js" >nul
@@ -38,33 +60,33 @@ copy /Y "site\donate_zfb.jpg" "donate_zfb.jpg" >nul
 git add -A
 git commit -m "auto update data" >nul 2>&1
 
-:: è‡ªåŠ¨æ¢æµ‹ç³»ç»Ÿä»£ç†ï¼ˆgithub åœ¨å›½å†…è¢«å¢™ï¼Œgit é»˜è®¤ä¸èµ°ç³»ç»Ÿä»£ç†ï¼Œéœ€æ‰‹åŠ¨æŒ‡å®šï¼‰
-powershell -NoProfile -Command "git config --local --unset http.proxy 2>$null; git config --local --unset https.proxy 2>$null; $p=$env:HTTPS_PROXY;if(-not $p){$p=$env:HTTP_PROXY};if(-not $p){try{$s=Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';if($s.ProxyEnable -eq 1 -and $s.ProxyServer){$p=$s.ProxyServer}}catch{}};if($p){if($p -match 'https=(https?://[^;]+)'){$p=$Matches[1]}elseif($p -match 'http=(https?://[^;]+)'){$p=$Matches[1]}elseif($p -match '^\s*(https?://)'){}elseif($p -match '^[^:]+:\d+$'){$p='http://'+$p};git config --local http.proxy $p;git config --local https.proxy $p;Write-Host ('[ä»£ç†] å·²ä¸º git è®¾ç½®ä»£ç†: '+$p)}else{Write-Host '[ä»£ç†] æœªæ£€æµ‹åˆ°ä»£ç†ï¼Œå°†ç›´è¿å°è¯•'}"
+:: ×Ô¶¯Ì½²âÏµÍ³´úÀí£¨github ÔÚ¹úÄÚ±»Ç½£¬git Ä¬ÈÏ²»×ßÏµÍ³´úÀí£¬ĞèÊÖ¶¯Ö¸¶¨£©
+powershell -NoProfile -Command "git config --local --unset http.proxy 2>$null; git config --local --unset https.proxy 2>$null; $p=$env:HTTPS_PROXY;if(-not $p){$p=$env:HTTP_PROXY};if(-not $p){try{$s=Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings';if($s.ProxyEnable -eq 1 -and $s.ProxyServer){$p=$s.ProxyServer}}catch{}};if($p){if($p -match 'https=(https?://[^;]+)'){$p=$Matches[1]}elseif($p -match 'http=(https?://[^;]+)'){$p=$Matches[1]}elseif($p -match '^\s*(https?://)'){}elseif($p -match '^[^:]+:\d+$'){$p='http://'+$p};git config --local http.proxy $p;git config --local https.proxy $p;Write-Host ('[´úÀí] ÒÑÎª git ÉèÖÃ´úÀí: '+$p)}else{Write-Host '[´úÀí] Î´¼ì²âµ½´úÀí£¬½«Ö±Á¬³¢ÊÔ'}"
 
 git push origin main 2>push_err.log
 if errorlevel 1 (
-    echo   [è­¦å‘Š] ç½‘ä¸ŠåŒæ­¥å¤±è´¥ï¼Œä½†æœ¬åœ°æ•°æ®å·²æ›´æ–°ã€‚é”™è¯¯è¯¦æƒ…ï¼š
+    echo   [¾¯¸æ] ÍøÉÏÍ¬²½Ê§°Ü£¬µ«±¾µØÊı¾İÒÑ¸üĞÂ¡£´íÎóÏêÇé£º
     type push_err.log
-    echo   è¯·ç¡®è®¤ VPN/ä»£ç†å·²å¼€å¯ï¼Œæˆ–æŠŠä¸Šé¢çš„é”™è¯¯å‘ç»™åŠ©æ‰‹å¤„ç†ã€‚
+    echo   ÇëÈ·ÈÏ VPN/´úÀíÒÑ¿ªÆô£¬»ò°ÑÉÏÃæµÄ´íÎó·¢¸øÖúÊÖ´¦Àí¡£
 ) else (
-    echo   [OK] å·²åŒæ­¥åˆ° GitHubï¼ŒGitHub Pages å°†è‡ªåŠ¨æ›´æ–°ã€‚åˆ«äººåˆ·æ–°æµè§ˆå™¨å³å¯çœ‹åˆ°æœ€æ–°æ•°æ®ã€‚
+    echo   [OK] ÒÑÍ¬²½µ½ GitHub£¬GitHub Pages ½«×Ô¶¯¸üĞÂ¡£±ğÈËË¢ĞÂä¯ÀÀÆ÷¼´¿É¿´µ½×îĞÂÊı¾İ¡£
 )
 del /q push_err.log >nul 2>&1
 
 echo.
 echo ========================================
-echo   æ•°æ®åˆ·æ–°å®Œæˆï¼
-echo   æ­£åœ¨è‡ªåŠ¨æ‰“å¼€ç½‘ç«™...
+echo   Êı¾İË¢ĞÂÍê³É£¡
+echo   ÕıÔÚ×Ô¶¯´ò¿ªÍøÕ¾...
 echo ========================================
 start "" "site\index.html"
-powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('èµ„é‡‘æµæ•°æ®å·²åˆ·æ–°å¹¶åŒæ­¥åˆ° GitHub Pagesï¼ˆhttps://lc992999425-max.github.io/sw-fund-flow/ï¼‰ã€‚åˆ«äººåˆ·æ–°æµè§ˆå™¨ï¼ˆæˆ–æŒ‰ Ctrl+F5ï¼‰å³å¯çœ‹åˆ°æœ€æ–°æ•°æ®ã€‚','åˆ·æ–°å®Œæˆ')"
+powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('×Ê½ğÁ÷Êı¾İÒÑË¢ĞÂ²¢Í¬²½µ½ GitHub Pages£¨https://lc992999425-max.github.io/sw-fund-flow/£©¡£±ğÈËË¢ĞÂä¯ÀÀÆ÷£¨»ò°´ Ctrl+F5£©¼´¿É¿´µ½×îĞÂÊı¾İ¡£','Ë¢ĞÂÍê³É')"
 goto DONE
 
 :FAIL
 echo.
 echo ========================================
-echo   åˆ·æ–°å¤±è´¥ï¼é”™è¯¯ç : %errorlevel%
-echo   è¯·æŠŠä¸Šæ–¹æŠ¥é”™ä¿¡æ¯å‘ç»™åŠ©æ‰‹å¤„ç†ã€‚
+echo   Ë¢ĞÂÊ§°Ü£¡´íÎóÂë: %errorlevel%
+echo   Çë°ÑÉÏ·½±¨´íĞÅÏ¢·¢¸øÖúÊÖ´¦Àí¡£
 echo ========================================
 
 :DONE
